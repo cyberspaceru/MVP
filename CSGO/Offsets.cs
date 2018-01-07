@@ -36,6 +36,11 @@ namespace MVP.CSGO
                 Dormant = process.ReadBool(Base + DormantOffset);
                 Position = process.ReadVector3(Base + PositionOffset);
             }
+
+            public override string ToString()
+            {
+                return $"{nameof(Base)}: {Base}, {nameof(Health)}: {Health}, {nameof(Team)}: {Team}, {nameof(Dormant)}: {Dormant}, {nameof(Position)}: {Position}";
+            }
         }
 
         public class LocalPlayer : Player

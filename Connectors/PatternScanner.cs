@@ -45,15 +45,28 @@ namespace MVP.Connectors
             return process.ScanByPattern(baseAddress, size, BuildPattern(pattern));
         }
 
-        private static IntPtr ScanByPattern(this MvProcess process, IntPtr baseAddress, long size, PatternElement[] pattern)
+        private static unsafe IntPtr ScanByPattern(this MvProcess process, IntPtr baseAddress, long size, PatternElement[] pattern)
         {
-            var dump = Read(process.Pointer, baseAddress, (uint)size, out _);
-            var first = pattern[0].Byte;
-            for (var i = 0; i < dump.Length; i++)
+            fixed (byte* dump = Read(process.Pointer, baseAddress, (uint)size, out _))
             {
-                if (dump[i] == first && pattern.All(t => t.Byte == dump[i + t.Offset]))
+                var length = size / sizeof(byte);
+                var first = pattern[0].Byte;
+                for (var i = 0; i < length; i++)
                 {
-                    return baseAddress + i;
+                    if (first != *(dump + i)) continue;
+                    var hasFound = true;
+                    for (var j = 1; j < pattern.Length; j++)
+                    {
+                        if (pattern[j].Byte != *(dump + i + pattern[j].Offset))
+                        {
+                            hasFound = false;
+                            break;
+                        }
+                    }
+                    if (hasFound)
+                    {
+                        return baseAddress + i;
+                    }
                 }
             }
             return IntPtr.Zero;

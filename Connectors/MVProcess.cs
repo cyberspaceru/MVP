@@ -19,9 +19,9 @@ namespace MVP.Connectors
         public long MemoryUsage => Current.WorkingSet64;
         public ProcessModuleCollection Modules => Current.Modules;
 
-        private readonly Dictionary<string, ProcessModule> _mModulesBaseAddress = new Dictionary<string, ProcessModule>();
+        private readonly Dictionary<string, ProcessModule> _mDefinedModules = new Dictionary<string, ProcessModule>();
 
-        public ProcessModule this[string moduleName] => _mModulesBaseAddress.ContainsKey(moduleName) ? _mModulesBaseAddress[moduleName] : null;
+        public ProcessModule this[string moduleName] => _mDefinedModules.ContainsKey(moduleName) ? _mDefinedModules[moduleName] : null;
 
         private MvProcess(Process current)
         {
@@ -35,7 +35,7 @@ namespace MVP.Connectors
                 .SomeNotNull()
                 .Map(x =>
                 {
-                    _mModulesBaseAddress.Add(moduleName, x);
+                    _mDefinedModules.Add(moduleName, x);
                     return true;
                 })
                 .ValueOr(() => false);
@@ -56,8 +56,8 @@ namespace MVP.Connectors
 
         public override string ToString()
         {
-            var definedModulesDescription = _mModulesBaseAddress.Count.ToString();
-            _mModulesBaseAddress.SomeWhen(x => x.Count != 0).MatchSome(x =>
+            var definedModulesDescription = _mDefinedModules.Count.ToString();
+            _mDefinedModules.SomeWhen(x => x.Count != 0).MatchSome(x =>
             {
                 definedModulesDescription += "\n[";
                 foreach (var module in x)
