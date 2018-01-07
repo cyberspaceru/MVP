@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MVP.DLL.Wrappers;
+using MVP.GameConcepts;
 
 namespace MVP.Connectors
 {
@@ -82,6 +83,25 @@ namespace MVP.Connectors
         public static string ReadStringUnicode(this MvProcess process, long address, uint size)
         {
             return Encoding.Unicode.GetString(process.ReadByteArray(address, size));
+        }
+
+        public static Vector3 ReadVector3(this MvProcess process, long address)
+        {
+            return new Vector3
+            {
+                x = BitConverter.ToSingle(process.ReadByteArray(address, sizeof(float)), 0),
+                y = BitConverter.ToSingle(process.ReadByteArray(address + 4, sizeof(float)), 0),
+                z = BitConverter.ToSingle(process.ReadByteArray(address + 8, sizeof(float)), 0)
+            };
+        }
+
+        public static Vector3 ReadVector2(this MvProcess process, long address)
+        {
+            return new Vector2
+            {
+                x = BitConverter.ToSingle(process.ReadByteArray(address, sizeof(float)), 0),
+                y = BitConverter.ToSingle(process.ReadByteArray(address + 4, sizeof(float)), 0)
+            };
         }
     }
 }

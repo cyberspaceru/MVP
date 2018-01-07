@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="Connectors\ProcessReaders.cs" />
     <Compile Include="Connectors\ProcessUtils.cs" />
+    <Compile Include="CSGO\Offsets.cs" />
     <Compile Include="DLL.Wrappers\Kernel32.cs" />
     <Compile Include="DLL.Wrappers\ProcessStatus.cs" />
     <Compile Include="Connectors\MvProcess.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="GameConcepts\Vector3.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Connectors\PatternScanner.cs" />
     <Compile Include="Utils\ProcessEx.cs" />
   </ItemGroup>
   <ItemGroup>

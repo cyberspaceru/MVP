@@ -9,6 +9,8 @@ namespace MVP.Connectors
 {
     public class MvProcess
     {
+        public static long UndefinedModuleMark => ProcessUtils.UndefinedModuleMark;
+
         public Process Current { get; private set; }
         public IntPtr Pointer { get; private set; }
 
@@ -17,7 +19,9 @@ namespace MVP.Connectors
         public long MemoryUsage => Current.WorkingSet64;
         public ProcessModuleCollection Modules => Current.Modules;
 
-        private readonly Dictionary<string, long> _mModulesBaseAddress = new Dictionary<string, long>();
+        private readonly Dictionary<string, ProcessModule> _mModulesBaseAddress = new Dictionary<string, ProcessModule>();
+
+        public ProcessModule this[string moduleName] => _mModulesBaseAddress.ContainsKey(moduleName) ? _mModulesBaseAddress[moduleName] : null;
 
         private MvProcess(Process current)
         {
@@ -27,8 +31,8 @@ namespace MVP.Connectors
 
         public bool DefineModule(string moduleName)
         {
-            return this.GetModuleAddressByName(moduleName)
-                .SomeWhen(x => x != ProcessUtils.UndefinedModuleAddress)
+            return this.GetModuleByName(moduleName)
+                .SomeNotNull()
                 .Map(x =>
                 {
                     _mModulesBaseAddress.Add(moduleName, x);
@@ -58,7 +62,7 @@ namespace MVP.Connectors
                 definedModulesDescription += "\n[";
                 foreach (var module in x)
                 {
-                    definedModulesDescription += "\n" + module.Key + " : " + module.Value.ToString("X");
+                    definedModulesDescription += "\n" + module.Key + " : " + module.Value.BaseAddress.ToString("X");
                 }
                 definedModulesDescription += "\n]";
             });
