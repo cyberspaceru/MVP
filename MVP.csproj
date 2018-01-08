@@ -65,7 +65,12 @@
   <ItemGroup>
     <Compile Include="Connectors\ProcessReaders.cs" />
     <Compile Include="Connectors\ProcessUtils.cs" />
-    <Compile Include="CSGO\Offsets.cs" />
+    <Compile Include="CSGO\GameObjects\Entity.cs" />
+    <Compile Include="CSGO\GameObjects\Player.cs" />
+    <Compile Include="CSGO\GameObjects\PlayerPhysics.cs" />
+    <Compile Include="CSGO\GameObjects\PlayerStatus.cs" />
+    <Compile Include="CSGO\GameObjects\ProcessReader.cs" />
+    <Compile Include="CSGO\Signatures.cs" />
     <Compile Include="DLL.Wrappers\Kernel32.cs" />
     <Compile Include="DLL.Wrappers\ProcessStatus.cs" />
     <Compile Include="Connectors\MvProcess.cs" />

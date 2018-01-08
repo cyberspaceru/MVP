@@ -10,14 +10,20 @@ namespace MVP.Connectors
 {
     public static class ProcessReaders
     {
+        public enum Vector3StorageType
+        {
+            Xyz,
+            Xzy
+        }
+
         public static byte[] ReadByteArray(this MvProcess process, long address, uint pSize)
         {
             var buffer = new byte[pSize];
             try
             {
-               Kernel32.ReadProcessMemory(process.Pointer, (IntPtr)address, buffer, pSize, 0U);
+                Kernel32.ReadProcessMemory(process.Pointer, (IntPtr)address, buffer, pSize, 0U);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 Console.WriteLine("Reading memory error for {\n" + process.ToString() + "\n}");
                 Console.WriteLine("Exception's message: " + exception.Message);
@@ -46,6 +52,11 @@ namespace MVP.Connectors
         }
 
         public static Int32 ReadInt32(this MvProcess process, long address)
+        {
+            return BitConverter.ToInt32(process.ReadByteArray(address, sizeof(Int32)), 0);
+        }
+
+        public static Int32 ReadPointer32(this MvProcess process, long address)
         {
             return BitConverter.ToInt32(process.ReadByteArray(address, sizeof(Int32)), 0);
         }
@@ -85,14 +96,25 @@ namespace MVP.Connectors
             return Encoding.Unicode.GetString(process.ReadByteArray(address, size));
         }
 
-        public static Vector3 ReadVector3(this MvProcess process, long address)
+        public static Vector3 ReadVector3(this MvProcess process, long address, Vector3StorageType storageType)
         {
-            return new Vector3
+            switch (storageType)
             {
-                x = BitConverter.ToSingle(process.ReadByteArray(address, sizeof(float)), 0),
-                y = BitConverter.ToSingle(process.ReadByteArray(address + 4, sizeof(float)), 0),
-                z = BitConverter.ToSingle(process.ReadByteArray(address + 8, sizeof(float)), 0)
-            };
+                case Vector3StorageType.Xyz:
+                    return new Vector3
+                    {
+                        x = BitConverter.ToSingle(process.ReadByteArray(address, sizeof(float)), 0),
+                        y = BitConverter.ToSingle(process.ReadByteArray(address + 4, sizeof(float)), 0),
+                        z = BitConverter.ToSingle(process.ReadByteArray(address + 8, sizeof(float)), 0)
+                    };
+                default:
+                    return new Vector3
+                    {
+                        x = BitConverter.ToSingle(process.ReadByteArray(address, sizeof(float)), 0),
+                        y = BitConverter.ToSingle(process.ReadByteArray(address + 8, sizeof(float)), 0),
+                        z = BitConverter.ToSingle(process.ReadByteArray(address + 4, sizeof(float)), 0)
+                    };
+            }
         }
 
         public static Vector3 ReadVector2(this MvProcess process, long address)

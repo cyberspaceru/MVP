@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using MVP.Connectors;
 using MVP.CSGO;
+using MVP.CSGO.GameObjects;
 using MVP.Utils;
 using Optional;
 
@@ -16,21 +17,15 @@ namespace MVP
         private const string ClientModule = "client.dll";
         private const string EngineModule = "engine.dll";
 
-        private static long _mViewMatrixBaseAddress;
-        private static long _mLocalPlayerBaseAddress;
-        private static long _mEntityListBaseAddress;
+        private static long _mViewMatrixAnchor;
+        private static long _mLocalPlayerAnchor;
+        private static long _mEntityListAnchor;
 
         private static void Main()
         {
             var mvProcess = FindProcess(ProcessName);
             DefineModules(mvProcess, new[] { ClientModule, EngineModule });
-            if (mvProcess[ClientModule] == null)
-            {
-                Console.WriteLine($"Can't find \"{ClientModule}\" [MODULE] for: \n" + mvProcess);
-                Console.ReadKey();
-                return;
-            }
-            Stopwatch sw = new Stopwatch();;
+            Stopwatch sw = new Stopwatch();
             sw.Start();
             InitilazeBaseAddresses(mvProcess);
             Console.WriteLine(sw.ElapsedMilliseconds + " ms.");
@@ -40,25 +35,27 @@ namespace MVP
         private static void InitilazeBaseAddresses(MvProcess process)
         {
             // Find out the View Matrix base address:
-            _mViewMatrixBaseAddress = 0x3 + (long)process.ScanModuleByPattern(ClientModule, Offsets.ViewMatrixPattern);
-            _mViewMatrixBaseAddress = 0xB0 + process.ReadInt32(_mViewMatrixBaseAddress);
-
-            // Find out the Local Player base address: 
-            _mLocalPlayerBaseAddress = 0x3 + (long)process.ScanModuleByPattern(ClientModule, Offsets.LocalPlayerPattern);
-            _mLocalPlayerBaseAddress = process.ReadInt32(_mLocalPlayerBaseAddress);
-            _mLocalPlayerBaseAddress = process.ReadInt32(_mLocalPlayerBaseAddress + 4);
+            _mViewMatrixAnchor = 0x3 + (long)process.ScanModuleByPattern(ClientModule, Signatures.ViewMatrix);
+            _mViewMatrixAnchor = 0xB0 + process.ReadPointer32(_mViewMatrixAnchor);
 
             // Find out the Entity List base address: 
-            _mEntityListBaseAddress = 0xB + (long)process.ScanModuleByPattern(ClientModule, Offsets.EntityListPattern);
-            _mEntityListBaseAddress = process.ReadInt32(_mEntityListBaseAddress);
+            _mEntityListAnchor = 0xB + (long)process.ScanModuleByPattern(ClientModule, Signatures.EntityList);
+            _mEntityListAnchor = process.ReadPointer32(_mEntityListAnchor);
 
-            Console.WriteLine($"ViewMatrix: {_mViewMatrixBaseAddress}, LocalPlayer: {_mLocalPlayerBaseAddress}, EntityList: {_mEntityListBaseAddress}");
+            Entity localPlayer = Entity.ReadLocalPlayerByEntityListAnchor(process, _mEntityListAnchor);
+            Console.WriteLine(localPlayer);
+            Console.WriteLine(localPlayer.PlayerStatus.PlayerPhysics.Velocity);
+
+            Console.WriteLine($"ViewMatrix: {_mViewMatrixAnchor:X}, LocalPlayer: {_mLocalPlayerAnchor:X}, EntityList: {_mEntityListAnchor:X}");
         }
 
         private static void DefineModules(MvProcess process, string[] modules)
         {
             process.SomeNotNull()
-                .MatchSome(x => modules.ToList().ForEach(m => x.DefineModule(m)));
+                .MatchSome(x =>
+                {
+                    modules.ToList().ForEach(m => x.DefineModule(m));
+                });
         }
 
         private static MvProcess FindProcess(string processName)

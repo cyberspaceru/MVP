@@ -49,9 +49,8 @@ namespace MVP.Connectors
         {
             fixed (byte* dump = Read(process.Pointer, baseAddress, (uint)size, out _))
             {
-                var length = size / sizeof(byte);
                 var first = pattern[0].Byte;
-                for (var i = 0; i < length; i++)
+                for (var i = 0; i < size; i++)
                 {
                     if (first != *(dump + i)) continue;
                     var hasFound = true;
