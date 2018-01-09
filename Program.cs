@@ -44,7 +44,6 @@ namespace MVP
 
             Entity localPlayer = Entity.ReadLocalPlayerByEntityListAnchor(process, _mEntityListAnchor);
             Console.WriteLine(localPlayer);
-            Console.WriteLine(localPlayer.PlayerStatus.PlayerPhysics.Velocity);
 
             Console.WriteLine($"ViewMatrix: {_mViewMatrixAnchor:X}, LocalPlayer: {_mLocalPlayerAnchor:X}, EntityList: {_mEntityListAnchor:X}");
         }

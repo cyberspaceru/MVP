@@ -10,7 +10,7 @@ namespace MVP.CSGO.GameObjects
     public abstract class ProcessReader
     {
         public MvProcess Process { get; }
-        public long Anchor { get; } // Don't storage pointers.
+        public long Anchor { get; } // Don't storage pointers (Anchor is the base address which using to initializing an object with offsets).
 
         protected ProcessReader(MvProcess process, long anchor)
         {

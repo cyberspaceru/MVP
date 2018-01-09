@@ -13,15 +13,20 @@ namespace MVP.CSGO.GameObjects
         public int Health { get; private set; }
         public int Team { get; private set; }
         public bool Dormant { get; private set; }
+        public float CameraHeight { get; private set; }
+        public Vector3 Velocity { get; private set; }
+        public Vector2 Angle { get; private set; }
         public Vector3 Position { get; private set; }
-        public PlayerStatus PlayerStatus { get; private set; }
+        // We can find the player position and in order to get the camera position without an offset for one, we just apply some trick.
+        public Vector3 CameraPosition => new Vector3(Position.x, Position.y + CameraHeight, Position.z);
 
         public readonly long HealthOffset = 0xFC;
         public readonly long TeamOffset = 0xF0;
         public readonly long DormantOffset = 0xE9;
+        public readonly long CameraHeightOffset = 0x10C;
+        public readonly long VelocityOffset = 0x110;
+        public readonly long AngleOffset = 0x128;
         public readonly long PositionOffset = 0x134;
-
-        public readonly long PlayerStatusOffsetAsPointer = 0x24;
 
         protected Player(MvProcess process, long anchor) : base(process, anchor)
         {
@@ -33,17 +38,19 @@ namespace MVP.CSGO.GameObjects
             Health = Process.ReadInt32(Anchor + HealthOffset);
             Team = Process.ReadInt32(Anchor + TeamOffset);
             Dormant = Process.ReadBool(Anchor + DormantOffset);
+            CameraHeight = Process.ReadFloat(Anchor + CameraHeightOffset);
+            Velocity = Process.ReadVector3(Anchor + VelocityOffset, ProcessReaders.Vector3StorageType.Xzy);
             Position = Process.ReadVector3(Anchor + PositionOffset, ProcessReaders.Vector3StorageType.Xzy);
-            if (PlayerStatus == null)
-            {
-                PlayerStatus = new PlayerStatus(Process, Process.ReadPointer32(Anchor + PlayerStatusOffsetAsPointer));
-            }
-            PlayerStatus.Read();
+            Angle = Process.ReadVector2(Anchor + AngleOffset);
         }
 
         public override string ToString()
         {
-            return $"{nameof(Anchor)}: {Anchor:X}, {nameof(Health)}: {Health}, {nameof(Team)}: {Team}, {nameof(Dormant)}: {Dormant}, {nameof(Position)}: {Position}";
+            return $"{nameof(Health)}: {Health}," +
+                   $" {nameof(Team)}: {Team}," +
+                   $" {nameof(Dormant)}: {Dormant}," +
+                   $" {nameof(Angle)}: {Angle}," +
+                   $" {nameof(CameraPosition)}: {CameraPosition}";
         }
     }
 }

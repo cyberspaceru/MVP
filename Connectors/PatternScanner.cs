@@ -45,26 +45,30 @@ namespace MVP.Connectors
             return process.ScanByPattern(baseAddress, size, BuildPattern(pattern));
         }
 
-        private static unsafe IntPtr ScanByPattern(this MvProcess process, IntPtr baseAddress, long size, PatternElement[] pattern)
+        private static unsafe IntPtr ScanByPattern(this MvProcess process, IntPtr baseAddress, long size, PatternElement[] patternAsArray)
         {
-            fixed (byte* dump = Read(process.Pointer, baseAddress, (uint)size, out _))
+            fixed (PatternElement* pattern = patternAsArray)
             {
-                var first = pattern[0].Byte;
-                for (var i = 0; i < size; i++)
+                fixed (byte* dump = Read(process.Pointer, baseAddress, (uint)size, out _))
                 {
-                    if (first != *(dump + i)) continue;
-                    var hasFound = true;
-                    for (var j = 1; j < pattern.Length; j++)
+                    var first = patternAsArray[0].Byte;
+                    var patternSize = patternAsArray.Length;
+                    for (var i = 0; i < size; i++)
                     {
-                        if (pattern[j].Byte != *(dump + i + pattern[j].Offset))
+                        if (first != *(dump + i)) continue;
+                        var hasFound = true;
+                        for (var j = 1; j < patternSize; j++)
                         {
-                            hasFound = false;
-                            break;
+                            if ((pattern + j)->Byte != *(dump + i + (pattern + j)->Offset))
+                            {
+                                hasFound = false;
+                                break;
+                            }
                         }
-                    }
-                    if (hasFound)
-                    {
-                        return baseAddress + i;
+                        if (hasFound)
+                        {
+                            return baseAddress + i;
+                        }
                     }
                 }
             }
