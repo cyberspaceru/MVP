@@ -27,18 +27,7 @@ namespace MVP.Connectors
         {
             this.Current = current;
             this.Pointer = Kernel32.OpenProcess(Kernel32.ProcessAccessFlags.VirtualMemoryRead, false, current.Id);
-        }
-
-        public bool DefineModule(string moduleName)
-        {
-            return this.GetModuleByName(moduleName)
-                .SomeNotNull()
-                .Map(x =>
-                {
-                    _mDefinedModules.Add(moduleName, x);
-                    return true;
-                })
-                .ValueOr(() => false);
+            this.Modules.Cast<ProcessModule>().ToList().ForEach(x => _mDefinedModules.Add(x.ModuleName, x));
         }
 
         public static MvProcess FindByName(string processName)

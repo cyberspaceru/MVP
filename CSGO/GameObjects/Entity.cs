@@ -19,13 +19,18 @@ namespace MVP.CSGO.GameObjects
         public static Entity ReadAnyByEntityListAnchor(MvProcess process, long entityListAnchor, int index)
         {
             long entityAnchor = process.ReadPointer32(entityListAnchor + index * EntityStepSize); // Read the player pointer.
-            return entityAnchor == 0 ? null : new Entity(process, entityAnchor);
+            if (entityAnchor != 0)
+            {
+                Entity entity = new Entity(process, entityAnchor);
+                entity?.Read();
+                return entity;
+            }
+            return null ;
         }
 
         public static Entity ReadLocalPlayerByEntityListAnchor(MvProcess process, long entityListAnchor)
         {
             var entity = ReadAnyByEntityListAnchor(process, entityListAnchor, LocalPlayerIndex);
-            entity?.Read();
             return entity;
         }
 

@@ -18,13 +18,12 @@ namespace MVP
         private const string EngineModule = "engine.dll";
 
         private static long _mViewMatrixAnchor;
-        private static long _mLocalPlayerAnchor;
+        private static long _mGlowObjectAnchor;
         private static long _mEntityListAnchor;
 
         private static void Main()
         {
             var mvProcess = FindProcess(ProcessName);
-            DefineModules(mvProcess, new[] { ClientModule, EngineModule });
             Stopwatch sw = new Stopwatch();
             sw.Start();
             InitilazeBaseAddresses(mvProcess);
@@ -35,26 +34,24 @@ namespace MVP
         private static void InitilazeBaseAddresses(MvProcess process)
         {
             // Find out the View Matrix base address:
-            _mViewMatrixAnchor = 0x3 + (long)process.ScanModuleByPattern(ClientModule, Signatures.ViewMatrix);
+            _mViewMatrixAnchor = 0x3 + (long)process.ScanModuleByPattern(ClientModule, Signatures.ViewMatrixPattern);
             _mViewMatrixAnchor = 0xB0 + process.ReadPointer32(_mViewMatrixAnchor);
 
+            // Find out the GlowO Object base address: 
+            _mGlowObjectAnchor = process.ReadPointer32((long)process[ClientModule].BaseAddress + Signatures.GlowObjectOffset);
+            _mGlowObjectAnchor = process.ReadPointer32(_mGlowObjectAnchor);
+
             // Find out the Entity List base address: 
-            _mEntityListAnchor = 0xB + (long)process.ScanModuleByPattern(ClientModule, Signatures.EntityList);
+            _mEntityListAnchor = 0xB + (long)process.ScanModuleByPattern(ClientModule, Signatures.EntityListPattern);
             _mEntityListAnchor = process.ReadPointer32(_mEntityListAnchor);
 
             Entity localPlayer = Entity.ReadLocalPlayerByEntityListAnchor(process, _mEntityListAnchor);
             Console.WriteLine(localPlayer);
+            Entity enemy = Entity.ReadAnyByEntityListAnchor(process, _mEntityListAnchor, 1);
+            Console.WriteLine(enemy);
+            Console.WriteLine(enemy.Anchor.ToString("X"));
 
-            Console.WriteLine($"ViewMatrix: {_mViewMatrixAnchor:X}, LocalPlayer: {_mLocalPlayerAnchor:X}, EntityList: {_mEntityListAnchor:X}");
-        }
-
-        private static void DefineModules(MvProcess process, string[] modules)
-        {
-            process.SomeNotNull()
-                .MatchSome(x =>
-                {
-                    modules.ToList().ForEach(m => x.DefineModule(m));
-                });
+            Console.WriteLine($"ViewMatrix: {_mViewMatrixAnchor:X}, GlowObject: {((long)process[ClientModule].BaseAddress + Signatures.GlowObjectOffset):X}, EntityList: {_mEntityListAnchor:X}");
         }
 
         private static MvProcess FindProcess(string processName)
